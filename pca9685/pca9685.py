@@ -1,5 +1,8 @@
-import RPi.GPIO as GPIO
+import board 
+from digitalio import DigitalInOut, Direction, Pull  # GPIO module
+
 import smbus2
+
 
 _address = 0x40
 
@@ -61,9 +64,9 @@ class PCA9685:
         self._bus = smbus2.SMBus(bus)
         self.initialize()
         # configure output enable pin
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(26, GPIO.OUT)
-
+        self.PWM_OE = DigitalInOut(board.D26)
+        self.PWM_OE.direction = Direction.OUTPUT
+        
     def initialize(self):
         # todo reset (write 0xb6 to i2c address 00 - general call)
         self.write(REG_MODE1, [MODE1_SLEEP | MODE1_AI])
@@ -125,12 +128,13 @@ class PCA9685:
 
     # set OE pin LOW
     def output_enable(self):
-        GPIO.output(26, GPIO.LOW)
+        self.PWM_OE.value = False  # armed
+
         return
 
     # set OE pin HIGH
     def output_disable(self):
-        GPIO.output(26, GPIO.HIGH)
+        self.PWM_OE.value = True  # disarmed
         return
 
     # get the state of the output enable pin
